@@ -1,7 +1,7 @@
 const Paradox = require('../models/Paradox');
 
 const buildParadoxResponse = async (paradox) => {
-  const populated = await paradox.populate('createdBy', 'username school paradoxScore chaosIndex');
+  const populated = await paradox.populate('createdBy', 'username school paradoxScore chaosIndex role');
   return {
     _id: populated._id,
     title: populated.title,
@@ -24,7 +24,7 @@ const listParadoxes = async (req, res) => {
     if (status) filter.status = status;
 
     const paradoxes = await Paradox.find(filter)
-      .populate('createdBy', 'username school paradoxScore chaosIndex')
+      .populate('createdBy', 'username school paradoxScore chaosIndex role')
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ paradoxes });
@@ -35,7 +35,7 @@ const listParadoxes = async (req, res) => {
 
 const getById = async (req, res) => {
   try {
-    const paradox = await Paradox.findById(req.params.id).populate('createdBy', 'username school paradoxScore chaosIndex');
+    const paradox = await Paradox.findById(req.params.id).populate('createdBy', 'username school paradoxScore chaosIndex role');
 
     if (!paradox) {
       return res.status(404).json({ message: 'Paradoja no encontrada' });
@@ -170,6 +170,74 @@ const voteResponse = async (req, res) => {
   }
 };
 
+const updateParadox = async (req, res) => {
+  const { title, statement, category, status } = req.body;
+
+  try {
+    const paradox = await Paradox.findById(req.params.id);
+
+    if (!paradox) {
+      return res.status(404).json({ message: 'Paradoja no encontrada' });
+    }
+
+    const isCreator = paradox.createdBy.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({
+        message: 'No tienes permiso para modificar esta paradoja',
+      });
+    }
+
+    if (title !== undefined) paradox.title = title;
+    if (statement !== undefined) paradox.statement = statement;
+    if (category !== undefined) paradox.category = category;
+    if (status !== undefined) paradox.status = status;
+
+    await paradox.save();
+
+    return res.status(200).json({
+      message: 'Paradoja actualizada correctamente',
+      paradox: await buildParadoxResponse(paradox),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error al actualizar la paradoja',
+      error: error.message,
+    });
+  }
+};
+
+const deleteParadox = async (req, res) => {
+  try {
+    const paradox = await Paradox.findById(req.params.id);
+
+    if (!paradox) {
+      return res.status(404).json({ message: 'Paradoja no encontrada' });
+    }
+
+    const isCreator = paradox.createdBy.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({
+        message: 'No tienes permiso para eliminar esta paradoja',
+      });
+    }
+
+    await Paradox.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({
+      message: 'Paradoja eliminada correctamente',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error al eliminar la paradoja',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   listParadoxes,
   getById,
@@ -177,4 +245,6 @@ module.exports = {
   addLayer,
   addResponse,
   voteResponse,
+  updateParadox,
+  deleteParadox,
 };

@@ -9,6 +9,7 @@ const sanitizeUser = (user) => ({
   school: user.school,
   paradoxScore: user.paradoxScore,
   chaosIndex: user.chaosIndex,
+  role: user.role,
   createdAt: user.createdAt,
 });
 
@@ -32,6 +33,7 @@ const register = async (req, res) => {
       email,
       password: hashedPassword,
       school: school || 'Skeptic',
+      role: 'user',
     });
 
     const token = generateToken({ id: user._id });
