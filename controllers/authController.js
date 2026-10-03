@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { generateToken } = require('../utils/token');
+const { checkBanStatus } = require('../middleware/auth');
 
 const sanitizeUser = (user) => ({
   _id: user._id,
@@ -10,6 +11,9 @@ const sanitizeUser = (user) => ({
   paradoxScore: user.paradoxScore,
   chaosIndex: user.chaosIndex,
   role: user.role,
+  isBanned: Boolean(user.isBanned),
+  banExpiresAt: user.banExpiresAt || null,
+  banReason: user.banReason || null,
   createdAt: user.createdAt,
 });
 
@@ -67,6 +71,15 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
+    const banStatus = await checkBanStatus(user);
+
+    if (banStatus.isBanned) {
+      return res.status(403).json({
+        message: 'Tu cuenta está temporalmente suspendida',
+        banExpiresAt: banStatus.banExpiresAt,
+      });
+    }
+
     const token = generateToken({ id: user._id });
 
     return res.status(200).json({
@@ -82,4 +95,4 @@ const getMe = async (req, res) => {
   return res.status(200).json({ user: sanitizeUser(req.user) });
 };
 
-module.exports = { register, login, getMe };
+module.exports = { register, login, getMe, sanitizeUser };
