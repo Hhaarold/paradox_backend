@@ -1,19 +1,6 @@
 const mongoose = require('mongoose');
 const User = require('../models/User');
-
-const sanitizeUser = (user) => ({
-  _id: user._id,
-  username: user.username,
-  email: user.email,
-  school: user.school,
-  paradoxScore: user.paradoxScore,
-  chaosIndex: user.chaosIndex,
-  role: user.role,
-  isBanned: Boolean(user.isBanned),
-  banExpiresAt: user.banExpiresAt || null,
-  banReason: user.banReason || null,
-  createdAt: user.createdAt,
-});
+const { sanitizeUser, canDeleteAdmin, canDemoteAdmin } = require('../services/userService');
 
 const getProfile = async (req, res) => {
   try {
@@ -72,9 +59,9 @@ const deleteUser = async (req, res) => {
     }
 
     if (targetUser.role === 'admin') {
-      const adminCount = await User.countDocuments({ role: 'admin' });
+      const canDelete = await canDeleteAdmin(User, targetUser);
 
-      if (adminCount <= 1) {
+      if (!canDelete) {
         return res.status(400).json({ message: 'No puedes eliminar al único administrador del sistema' });
       }
     }
@@ -191,9 +178,9 @@ const changeUserRole = async (req, res) => {
     }
 
     if (targetUser.role === 'admin' && role === 'user') {
-      const adminCount = await User.countDocuments({ role: 'admin' });
+      const canDemote = await canDemoteAdmin(User, targetUser, role);
 
-      if (adminCount <= 1) {
+      if (!canDemote) {
         return res.status(400).json({ message: 'No puedes dejar al sistema sin administradores' });
       }
     }

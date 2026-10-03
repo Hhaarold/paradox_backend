@@ -1,4 +1,5 @@
 const express = require('express');
+const { body, param } = require('express-validator');
 
 const {
   listParadoxes,
@@ -11,8 +12,9 @@ const {
   voteResponse,
 } = require('../controllers/paradoxController');
 
-const protect = require('../middleware/auth');
-const { authorize } = require('../middleware/auth');
+const protect = require('../middlewares/auth');
+const { authorize } = require('../middlewares/auth');
+const { handleValidationErrors, validateObjectId } = require('../middlewares/validators');
 
 const router = express.Router();
 
@@ -58,7 +60,7 @@ router.get('/', listParadoxes);
  *       500:
  *         description: Error interno del servidor
  */
-router.get('/:id', getById);
+router.get('/:id', validateObjectId('id'), handleValidationErrors, getById);
 
 /**
 /**
@@ -106,7 +108,18 @@ router.get('/:id', getById);
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/', protect, createParadox);
+router.post(
+  '/',
+  protect,
+  [
+    body('title').isString().trim().notEmpty().withMessage('title es obligatorio'),
+    body('statement').isString().trim().notEmpty().withMessage('statement es obligatorio'),
+    body('category').optional().isIn(['Time', 'Space', 'Identity', 'Knowledge', 'Ethics', 'Reality']).withMessage('category inválida'),
+    body('status').optional().isIn(['Active', 'Resolved', 'Draft', 'Frozen']).withMessage('status inválido'),
+  ],
+  handleValidationErrors,
+  createParadox
+);
  
 
 
@@ -141,7 +154,14 @@ router.post('/', protect, createParadox);
  *       404:
  *         description: Paradoja no encontrada
  */
-router.post('/:id/layers', protect, addLayer);
+router.post(
+  '/:id/layers',
+  protect,
+  validateObjectId('id'),
+  body('question').isString().trim().notEmpty().withMessage('question es obligatorio'),
+  handleValidationErrors,
+  addLayer
+);
 
 /**
  * @swagger
@@ -178,7 +198,16 @@ router.post('/:id/layers', protect, addLayer);
  *       404:
  *         description: Paradoja o capa no encontrada
  */
-router.post('/:id/layers/:layerIndex/responses', protect, addResponse);
+router.post(
+  '/:id/layers/:layerIndex/responses',
+  protect,
+  validateObjectId('id'),
+  param('layerIndex').isInt({ min: 0 }).withMessage('layerIndex debe ser un número válido'),
+  body('text').isString().trim().notEmpty().withMessage('text es obligatorio'),
+  body('type').optional().isIn(['resolve', 'complicate']).withMessage('type inválido'),
+  handleValidationErrors,
+  addResponse
+);
 
 /**
  * @swagger
@@ -209,7 +238,15 @@ router.post('/:id/layers/:layerIndex/responses', protect, addResponse);
  *       404:
  *         description: Paradoja o respuesta no encontrada
  */
-router.post('/:id/responses/:responseId/vote', protect, voteResponse);
+router.post(
+  '/:id/responses/:responseId/vote',
+  protect,
+  validateObjectId('id'),
+  validateObjectId('responseId'),
+  body('vote').isIn(['agree', 'disagree']).withMessage('vote debe ser agree o disagree'),
+  handleValidationErrors,
+  voteResponse
+);
 
 /**
  * @swagger
@@ -262,8 +299,19 @@ router.post('/:id/responses/:responseId/vote', protect, voteResponse);
  *       500:
  *         description: Error interno del servidor
  */
-router.put('/:id', protect, updateParadox);
-router.put('/admin/:id', protect, authorize('admin'), updateParadox);
+router.put(
+  '/:id',
+  protect,
+  validateObjectId('id'),
+  [
+    body('title').optional().isString().trim().notEmpty().withMessage('title no puede estar vacío'),
+    body('statement').optional().isString().trim().notEmpty().withMessage('statement no puede estar vacío'),
+    body('category').optional().isIn(['Time', 'Space', 'Identity', 'Knowledge', 'Ethics', 'Reality']).withMessage('category inválida'),
+    body('status').optional().isIn(['Active', 'Resolved', 'Draft', 'Frozen']).withMessage('status inválido'),
+  ],
+  handleValidationErrors,
+  updateParadox
+);
 
 /**
  * @swagger
@@ -290,7 +338,6 @@ router.put('/admin/:id', protect, authorize('admin'), updateParadox);
  *       500:
  *         description: Error interno del servidor
  */
-router.delete('/:id', protect, deleteParadox);
-router.delete('/admin/:id', protect, authorize('admin'), deleteParadox);
+router.delete('/:id', protect, validateObjectId('id'), handleValidationErrors, deleteParadox);
 
 module.exports = router;

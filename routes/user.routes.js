@@ -12,8 +12,8 @@ const {
   changeUserRole,
 } = require('../controllers/userController');
 
-const protect = require('../middleware/auth');
-const { authorize } = require('../middleware/auth');
+const protect = require('../middlewares/auth');
+const { authorize } = require('../middlewares/auth');
 
 const router = express.Router();
 

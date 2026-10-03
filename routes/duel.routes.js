@@ -1,12 +1,14 @@
 const express = require('express');
+const { body } = require('express-validator');
 
 const {
   listDuels,
   createDuel,
-  resolveDuel
+  resolveDuel,
 } = require('../controllers/duelController');
 
-const protect = require('../middleware/auth');
+const protect = require('../middlewares/auth');
+const { handleValidationErrors, validateObjectId } = require('../middlewares/validators');
 
 const router = express.Router();
 
@@ -59,7 +61,16 @@ router.get('/', protect, listDuels);
  *       500:
  *         description: Error interno del servidor
  */
-router.post('/', protect, createDuel);
+router.post(
+  '/',
+  protect,
+  [
+    body('paradoxId').isString().custom((value) => /^[a-fA-F0-9]{24}$/.test(value)).withMessage('paradoxId debe ser un ObjectId válido'),
+    body('opponentId').isString().custom((value) => /^[a-fA-F0-9]{24}$/.test(value)).withMessage('opponentId debe ser un ObjectId válido'),
+  ],
+  handleValidationErrors,
+  createDuel
+);
 
 /**
  * @swagger
@@ -94,6 +105,14 @@ router.post('/', protect, createDuel);
  *       500:
  *         description: Error interno del servidor
  */
-router.patch('/:id', protect, resolveDuel);
+router.patch(
+  '/:id',
+  protect,
+  validateObjectId('id'),
+  body('winnerId').optional().isString().custom((value) => /^[a-fA-F0-9]{24}$/.test(value)).withMessage('winnerId debe ser un ObjectId válido'),
+  body('status').optional().isIn(['active', 'completed', 'cancelled']).withMessage('status inválido'),
+  handleValidationErrors,
+  resolveDuel
+);
 
 module.exports = router;

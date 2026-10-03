@@ -1,8 +1,9 @@
 const express = require('express');
+const { body } = require('express-validator');
 
 const { register, login, getMe } = require('../controllers/authController');
-
-const protect = require('../middleware/auth');
+const protect = require('../middlewares/auth');
+const { handleValidationErrors } = require('../middlewares/validators');
 
 const router = express.Router();
 
@@ -45,7 +46,17 @@ const router = express.Router();
  *       400:
  *         description: Datos inválidos
  */
-router.post('/register', register);
+router.post(
+  '/register',
+  [
+    body('username').isString().trim().isLength({ min: 3 }).withMessage('username debe tener al menos 3 caracteres'),
+    body('email').isEmail().normalizeEmail().withMessage('email inválido'),
+    body('password').isString().isLength({ min: 6 }).withMessage('password debe tener al menos 6 caracteres'),
+    body('role').not().exists().withMessage('El rol no se puede enviar en el registro'),
+  ],
+  handleValidationErrors,
+  register
+);
 
 /**
  * @swagger
@@ -75,7 +86,15 @@ router.post('/register', register);
  *       401:
  *         description: Credenciales incorrectas
  */
-router.post('/login', login);
+router.post(
+  '/login',
+  [
+    body('email').isEmail().normalizeEmail().withMessage('email inválido'),
+    body('password').isString().isLength({ min: 6 }).withMessage('password debe tener al menos 6 caracteres'),
+  ],
+  handleValidationErrors,
+  login
+);
 
 
 /**

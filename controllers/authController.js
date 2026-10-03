@@ -1,21 +1,8 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { generateToken } = require('../utils/token');
-const { checkBanStatus } = require('../middleware/auth');
-
-const sanitizeUser = (user) => ({
-  _id: user._id,
-  username: user.username,
-  email: user.email,
-  school: user.school,
-  paradoxScore: user.paradoxScore,
-  chaosIndex: user.chaosIndex,
-  role: user.role,
-  isBanned: Boolean(user.isBanned),
-  banExpiresAt: user.banExpiresAt || null,
-  banReason: user.banReason || null,
-  createdAt: user.createdAt,
-});
+const { checkBanStatus } = require('../middlewares/auth');
+const { sanitizeUser } = require('../services/authService');
 
 const register = async (req, res) => {
   const { username, email, password, school } = req.body;
