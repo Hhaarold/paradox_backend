@@ -23,9 +23,17 @@ const checkBanStatus = async (user) => {
   };
 };
 
+const extractBearerToken = (authorizationHeader = '') => {
+  if (typeof authorizationHeader !== 'string') {
+    return null;
+  }
+
+  const match = authorizationHeader.trim().match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : null;
+};
+
 const protect = async (req, res, next) => {
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = extractBearerToken(req.headers.authorization);
 
   if (!token) {
     return res.status(401).json({ message: 'Token requerido' });
