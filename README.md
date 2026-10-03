@@ -1,47 +1,92 @@
 # ParadoX Backend
 
-API REST del proyecto ParadoX construida con Node.js, Express, MongoDB y Mongoose.
+API REST del proyecto **ParadoX**, desarrollada con Node.js, Express y MongoDB.
 
-## Requisitos
+## Stack
 
-- Node.js 18+
-- MongoDB Atlas o instancia local
-- JWT secret configurado en `.env`
+* Node.js
+* Express
+* MongoDB / Mongoose
+* JWT
+* bcryptjs
+* express-validator
+* Swagger
 
-## Instalación
+## Configuración
 
-1. Clona el repositorio.
-2. Instala dependencias:
-   ```bash
-   npm install
-   ```
-3. Crea un archivo `.env` basado en `.env.example`.
-4. Inicia el proyecto:
-   ```bash
-   npm start
-   ```
-
-## Variables de entorno
+Variables de entorno requeridas:
 
 ```env
 PORT=3000
-MONGODB_URI=tu_uri_de_mongodb
-JWT_SECRET=tu_clave_secreta
+MONGODB_URI=
+JWT_SECRET=
 ```
 
-## Endpoints principales
+## Ejecución
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `GET /api/paradoxes`
-- `POST /api/paradoxes`
-- `GET /api/users/ranking`
-- `GET /api/users/profile`
+```bash
+npm run dev
+```
 
-## Seguridad
+## Documentación
 
-- JWT con `JWT_SECRET` obligatorio.
-- Contraseñas nunca se devuelven en respuestas.
-- Roles permitidos: `user` y `admin`.
-- Endpoints administrativos protegidos con `protect` y `authorize('admin')`.
+Swagger UI:
+
+```text
+/api-docs
+```
+
+## Endpoints
+
+### Autenticación
+
+```text
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me
+```
+
+### Paradojas
+
+```text
+GET    /api/paradoxes
+GET    /api/paradoxes/:id
+POST   /api/paradoxes
+PUT    /api/paradoxes/:id
+DELETE /api/paradoxes/:id
+
+POST /api/paradoxes/:id/layers
+POST /api/paradoxes/:id/layers/:layerIndex/responses
+POST /api/paradoxes/:id/responses/:responseId/vote
+```
+
+### Usuarios
+
+```text
+GET    /api/users/profile
+GET    /api/users/ranking
+GET    /api/users
+DELETE /api/users/:id
+PATCH  /api/users/:id/ban
+PATCH  /api/users/:id/unban
+PATCH  /api/users/:id/role
+```
+
+### Duelos
+
+```text
+POST  /api/duels
+PATCH /api/duels/:id
+```
+
+## Roles
+
+* `user`
+* `admin`
+
+Las rutas que requieren autenticación utilizan JWT mediante `Authorization: Bearer <token>`.
+
+
+## Estado
+
+Backend funcional para integración con el frontend de ParadoX.
