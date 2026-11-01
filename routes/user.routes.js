@@ -4,6 +4,7 @@ const { body, param, validationResult } = require('express-validator');
 
 const {
   getProfile,
+  updateProfile,
   getRanking,
   getUsers,
   deleteUser,
