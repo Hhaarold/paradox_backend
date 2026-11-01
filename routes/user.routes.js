@@ -80,6 +80,11 @@ router.get('/ranking', getRanking);
  *         description: Error interno del servidor
  */
 router.get('/profile', protect, getProfile);
+router.patch('/profile', protect, [
+  body('username').optional().isString().trim().isLength({ min: 3, max: 30 }),
+  body('email').optional().isEmail().normalizeEmail(),
+  body('school').optional().isIn(['Skeptic', 'Stoic', 'Nihilist', 'Existentialist', 'Cynic']),
+], handleValidationErrors, updateProfile);
 
 /**
  * @swagger

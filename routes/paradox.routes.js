@@ -116,6 +116,8 @@ router.post(
     body('statement').isString().trim().notEmpty().withMessage('statement es obligatorio'),
     body('category').optional().isIn(['Time', 'Space', 'Identity', 'Knowledge', 'Ethics', 'Reality']).withMessage('category inválida'),
     body('status').optional().isIn(['Active', 'Resolved', 'Draft', 'Frozen']).withMessage('status inválido'),
+    body('layers').optional().isArray({ min: 2 }).withMessage('layers debe contener al menos dos capas'),
+    body('layers.*.question').optional().isString().trim().notEmpty().withMessage('Cada capa debe tener una pregunta'),
   ],
   handleValidationErrors,
   createParadox

@@ -22,6 +22,41 @@ const getProfile = async (req, res) => {
   }
 };
 
+
+const updateProfile = async (req, res) => {
+  try {
+    const { username, email, school } = req.body;
+    const updates = {};
+    if (username !== undefined) {
+      const cleanUsername = String(username).trim();
+      if (cleanUsername.length < 3) return res.status(400).json({ message: 'El nombre debe tener al menos 3 caracteres' });
+      updates.username = cleanUsername;
+    }
+    if (email !== undefined) {
+      const cleanEmail = String(email).trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return res.status(400).json({ message: 'Correo inválido' });
+      updates.email = cleanEmail;
+    }
+    if (school !== undefined) {
+      const allowedSchools = ['Skeptic', 'Stoic', 'Nihilist', 'Existentialist', 'Cynic'];
+      if (!allowedSchools.includes(school)) return res.status(400).json({ message: 'Escuela filosófica inválida' });
+      updates.school = school;
+    }
+    const conflict = await User.findOne({
+      _id: { $ne: req.user._id },
+      $or: [
+        ...(updates.username ? [{ username: updates.username }] : []),
+        ...(updates.email ? [{ email: updates.email }] : []),
+      ],
+    });
+    if (conflict) return res.status(409).json({ message: 'El nombre o correo ya está en uso' });
+    const user = await User.findByIdAndUpdate(req.user._id, { $set: updates }, { new: true, runValidators: true });
+    return res.status(200).json({ message: 'Perfil actualizado correctamente', user: sanitizeUser(user) });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error al actualizar perfil', error: error.message });
+  }
+};
+
 const getRanking = async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ paradoxScore: -1, chaosIndex: -1 }).limit(20);
@@ -199,6 +234,7 @@ const changeUserRole = async (req, res) => {
 
 module.exports = {
   getProfile,
+  updateProfile,
   getRanking,
   getUsers,
   deleteUser,

@@ -1,28 +1,45 @@
+
+
 # ParadoX Backend
 
-API REST del proyecto **ParadoX**, desarrollada con Node.js, Express y MongoDB.
+API REST encargada de gestionar los usuarios, paradojas, respuestas, votaciones y duelos de la aplicación ParadoX.
 
-## Stack
+## Tecnologías
+- Node.js
+- Express
+- MongoDB
+- Mongoose
+- JWT
+- bcryptjs
 
-* Node.js
-* Express
-* MongoDB / Mongoose
-* JWT
-* bcryptjs
-* express-validator
-* Swagger
+## Funcionalidades
+- Registro e inicio de sesión.
+- Autenticación mediante JWT.
+- Gestión de usuarios y roles.
+- CRUD de paradojas.
+- Gestión de respuestas y votaciones.
+- Gestión de duelos.
+- Conexión con MongoDB.
 
-## Configuración
+## Instalación
 
-Variables de entorno requeridas:
+Clonar el repositorio:
+
+```bash
+git clone https://github.com/Hhaarold/paradox_backend.git
+cd paradox_backend
+npm install
+```
+
+Crear un archivo `.env`:
 
 ```env
 PORT=3000
-MONGODB_URI=
-JWT_SECRET=
+MONGODB_URI=tu_uri_de_mongodb
+JWT_SECRET=tu_secreto_jwt
 ```
 
-## Ejecución
+Ejecutar:
 
 ```bash
 npm run dev
@@ -30,63 +47,13 @@ npm run dev
 
 ## Documentación
 
-Swagger UI:
+Con el servidor iniciado, consultar:
 
 ```text
-/api-docs
+http://localhost:3000/api-docs
 ```
 
-## Endpoints
+## Frontend
 
-### Autenticación
+**Repositorio:** https://github.com/Hhaarold/paradox
 
-```text
-POST /api/auth/register
-POST /api/auth/login
-GET  /api/auth/me
-```
-
-### Paradojas
-
-```text
-GET    /api/paradoxes
-GET    /api/paradoxes/:id
-POST   /api/paradoxes
-PUT    /api/paradoxes/:id
-DELETE /api/paradoxes/:id
-
-POST /api/paradoxes/:id/layers
-POST /api/paradoxes/:id/layers/:layerIndex/responses
-POST /api/paradoxes/:id/responses/:responseId/vote
-```
-
-### Usuarios
-
-```text
-GET    /api/users/profile
-GET    /api/users/ranking
-GET    /api/users
-DELETE /api/users/:id
-PATCH  /api/users/:id/ban
-PATCH  /api/users/:id/unban
-PATCH  /api/users/:id/role
-```
-
-### Duelos
-
-```text
-POST  /api/duels
-PATCH /api/duels/:id
-```
-
-## Roles
-
-* `user`
-* `admin`
-
-Las rutas que requieren autenticación utilizan JWT mediante `Authorization: Bearer <token>`.
-
-
-## Estado
-
-Backend funcional para integración con el frontend de ParadoX.

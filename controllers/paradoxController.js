@@ -1,7 +1,7 @@
 const Paradox = require('../models/Paradox');
 
 const buildParadoxResponse = async (paradox) => {
-  const populated = await paradox.populate('createdBy', 'username school paradoxScore chaosIndex role');
+  const populated = await paradox.populate('createdBy', 'username school paradoxScore chaosIndex role').then((doc) => doc.populate('layers.responses.authorId', 'username school paradoxScore chaosIndex role'));
   return {
     _id: populated._id,
     title: populated.title,
@@ -25,6 +25,7 @@ const listParadoxes = async (req, res) => {
 
     const paradoxes = await Paradox.find(filter)
       .populate('createdBy', 'username school paradoxScore chaosIndex role')
+      .populate('layers.responses.authorId', 'username school paradoxScore chaosIndex role')
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ paradoxes });
@@ -35,7 +36,7 @@ const listParadoxes = async (req, res) => {
 
 const getById = async (req, res) => {
   try {
-    const paradox = await Paradox.findById(req.params.id).populate('createdBy', 'username school paradoxScore chaosIndex role');
+    const paradox = await Paradox.findById(req.params.id).populate('createdBy', 'username school paradoxScore chaosIndex role').populate('layers.responses.authorId', 'username school paradoxScore chaosIndex role');
 
     if (!paradox) {
       return res.status(404).json({ message: 'Paradoja no encontrada' });
@@ -48,7 +49,7 @@ const getById = async (req, res) => {
 };
 
 const createParadox = async (req, res) => {
-  const { title, statement, category, status } = req.body;
+  const { title, statement, category, status, layers } = req.body;
 
   if (!title || !statement) {
     return res.status(400).json({ message: 'title y statement son obligatorios' });
@@ -61,11 +62,16 @@ const createParadox = async (req, res) => {
       category: category || 'Reality',
       status: status || 'Active',
       createdBy: req.user._id,
-      layers: [
-        { question: '¿Cuál es el núcleo de la paradoja?', responses: [] },
-        { question: '¿Qué supuesto debe cuestionarse?', responses: [] },
-        { question: '¿Qué consecuencia tendría una resolución?', responses: [] },
-      ],
+      layers: Array.isArray(layers) && layers.length
+        ? layers.map((layer) => ({
+            question: typeof layer === 'string' ? layer.trim() : String(layer.question ?? '').trim(),
+            responses: [],
+          })).filter((layer) => layer.question)
+        : [
+            { question: '¿Cuál es el núcleo de la paradoja?', responses: [] },
+            { question: '¿Qué supuesto debe cuestionarse?', responses: [] },
+            { question: '¿Qué consecuencia tendría una resolución?', responses: [] },
+          ],
     });
 
     return res.status(201).json({ paradox: await buildParadoxResponse(paradox) });
